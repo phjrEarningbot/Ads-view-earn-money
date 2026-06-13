@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Daily Rewards Hub</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    colors: { primary: '#2563eb', secondary: '#1e40af' }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #f3f4f6; }
+        /* Hide Scrollbar */
+        ::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Mobile App Container */
+        .app-container {
+            max-width: 414px; /* iPhone Max Width */
+            margin: 0 auto;
+            background: white;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        /* Animations */
+        @keyframes fadeUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-50px) scale(1.5); }
+        }
+        .point-anim {
+            position: absolute;
+            color: #10b981;
+            font-weight: bold;
+            font-size: 20px;
+            pointer-events: none;
+            animation: fadeUp 1s ease-out forwards;
+            z-index: 100;
+        }
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .pop-anim { animation: pop 0.3s ease-in-out; }
+    </style>
+</head>
+<body class="text-gray-800">
+
+<div class="app-container flex flex-col">
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="h-full flex flex-col justify-center items-center p-6 bg-white z-50 absolute inset-0">
+        <div class="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-white text-4xl mb-4 shadow-lg">
+            <i class="fas fa-gift"></i>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-800 mb-1">Daily Rewards Hub</h1>
+        <p class="text-gray-500 mb-8 text-sm">Earn rewards everyday simply!</p>
+        
+        <div class="w-full space-y-4">
+            <input type="text" id="login-email" placeholder="Email or Phone Number" class="w-full p-4 bg-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition">
+            <input type="password" id="login-pass" placeholder="Password" class="w-full p-4 bg-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition">
+            <button onclick="appState.login()" class="w-full bg-blue-600 text-white font-semibold p-4 rounded-xl shadow-md hover:bg-blue-700 active:scale-95 transition">Login / Register</button>
+        </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER (Hidden by default) -->
+    <div id="main-app" class="hidden flex-col h-full w-full">
+        
+        <!-- Top Header -->
+        <header class="bg-blue-600 text-white p-4 pt-6 flex justify-between items-center shadow-md z-10">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white text-blue-600 rounded-full flex items-center justify-center font-bold" id="user-initial">U</div>
+                <div>
+                    <h2 class="text-sm font-semibold" id="user-greeting">Hi, User!</h2>
+                    <p class="text-xs text-blue-200" id="header-points">Points: 0</p>
+                </div>
+            </div>
+            <div class="relative">
+                <i class="fas fa-bell text-xl"></i>
+                <div class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-blue-600"></div>
+            </div>
+        </header>
+
+        <!-- VIEWS CONTAINER -->
+        <main class="flex-1 overflow-y-auto hide-scroll bg-gray-50 pb-20 relative" id="views-container">
+            
+            <!-- 1. HOME VIEW -->
+            <div id="view-home" class="view-section p-4 space-y-4">
+                <!-- Balance Card -->
+                <div class="bg-gradient-to-r from-blue-600 to-blue-400 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+                    <i class="fas fa-coins absolute -right-4 -bottom-4 text-7xl text-white opacity-20"></i>
+                    <p class="text-sm text-blue-100 mb-1">Total Balance</p>
+                    <h1 class="text-4xl font-bold mb-2 flex items-center gap-2"><span id="dash-points">0</span> <span class="text-lg font-normal">Pts</span></h1>
+                    <p class="text-sm bg-black bg-opacity-20 inline-block px-3 py-1 rounded-full">≈ <span id="dash-bdt">0.00</span> BDT</p>
+                </div>
+
+                <!-- Referral Banner -->
+                <div class="bg-white rounded-xl p-4 shadow-sm flex items-center gap-4 border border-gray-100">
+                    <div class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xl">
+                        <i class="fas fa-user-friends"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-gray-800 text-sm">Refer & Earn</h3>
+                        <p class="text-xs text-gray-500">Get 200 points per friend</p>
+                    </div>
+                    <button onclick="appState.referFriend(event)" class="bg-blue-100 text-blue-600 px-4 py-2 rounded-lg text-sm font-bold active:scale-95 transition">Invite</button>
+                </div>
+
+                <!-- Leaderboard Snippet -->
+                <h3 class="font-bold text-gray-800 mt-6 mb-2 px-1">Top Earner Leaderboard</h3>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden" id="leaderboard-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- 2. TASKS VIEW -->
+            <div id="view-tasks" class="view-section hidden p-4 space-y-4">
+                <h2 class="text-xl font-bold text-gray-800">Earn Points</h2>
+                <p class="text-sm text-gray-500 mb-4">Complete simple tasks to earn real money.</p>
+
+                <div class="grid gap-3">
+                    <!-- Task Item -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 active:bg-gray-50" onclick="appState.doTask(event, 'Daily Check-in', 50)">
+                        <div class="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-xl"><i class="fas fa-calendar-check"></i></div>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-gray-800 text-sm">Daily Check-in</h4>
+                            <p class="text-xs text-gray-500">+50 Points</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-300"></i>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 active:bg-gray-50" onclick="appState.doTask(event, 'Watch Video Ad', 20)">
+                        <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-xl"><i class="fas fa-play-circle"></i></div>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-gray-800 text-sm">Watch Video Ad</h4>
+                            <p class="text-xs text-gray-500">+20 Points</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-300"></i>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 active:bg-gray-50" onclick="appState.doTask(event, 'Visit Sponsored Link', 10)">
+                        <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xl"><i class="fas fa-link"></i></div>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-gray-800 text-sm">Click Sponsored Link</h4>
+                            <p class="text-xs text-gray-500">+10 Points</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-300"></i>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 active:bg-gray-50" onclick="appState.doTask(event, 'Complete Survey', 100)">
+                        <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xl"><i class="fas fa-poll"></i></div>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-gray-800 text-sm">Simple Survey</h4>
+                            <p class="text-xs text-gray-500">+100 Points</p>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. WALLET VIEW -->
+            <div id="view-wallet" class="view-section hidden p-4 space-y-4">
+                <div class="text-center py-6">
+                    <h2 class="text-gray-500 text-sm font-semibold">Available Points</h2>
+                    <h1 class="text-4xl font-bold text-blue-600 my-1" id="wallet-points">0</h1>
+                    <p class="text-gray-800 font-medium">≈ <span id="wallet-bdt">0.00</span> BDT</p>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-xl text-xs flex items-start gap-2">
+                    <i class="fas fa-info-circle mt-0.5"></i>
+                    <p>Minimum withdrawal is <b>1000 Points (10 BDT)</b>. Conversion rate: 100 Points = 1 BDT.</p>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mt-4">
+                    <h3 class="font-bold text-gray-800 mb-4">Request Withdrawal</h3>
+                    
+                    <label class="block text-xs text-gray-500 mb-1">Select Method</label>
+                    <select id="withdraw-method" class="w-full p-3 mb-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-500">
+                        <option value="bKash">bKash (Personal)</option>
+                        <option value="Nagad">Nagad (Personal)</option>
+                    </select>
+
+                    <label class="block text-xs text-gray-500 mb-1">Account Number</label>
+                    <input type="number" id="withdraw-account" placeholder="01XXXXXXXXX" class="w-full p-3 mb-4 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-500">
+
+                    <label class="block text-xs text-gray-500 mb-1">Points to Withdraw</label>
+                    <input type="number" id="withdraw-amount" placeholder="e.g. 1000" class="w-full p-3 mb-6 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-500">
+
+                    <button onclick="appState.withdraw()" class="w-full bg-blue-600 text-white font-bold p-3 rounded-xl shadow hover:bg-blue-700 transition active:scale-95">Withdraw Now</button>
+                </div>
+            </div>
+
+            <!-- 4. PROFILE VIEW -->
+            <div id="view-profile" class="view-section hidden p-4 space-y-4">
+                <div class="flex flex-col items-center py-6">
+                    <div class="w-24 h-24 bg-blue-600 text-white rounded-full flex items-center justify-center text-4xl font-bold shadow-md mb-3" id="profile-initial">U</div>
+                    <h2 class="text-xl font-bold text-gray-800" id="profile-name">User</h2>
+                    <p class="text-gray-500 text-sm" id="profile-contact">+880 1234567890</p>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-4 border-b border-gray-50 flex items-center gap-4">
+                        <i class="fas fa-history text-blue-500 w-5"></i>
+                        <span class="flex-1 text-sm font-medium text-gray-700">Earning History</span>
+                        <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                    </div>
+                    <div class="p-4 border-b border-gray-50 flex items-center gap-4">
+                        <i class="fas fa-headset text-blue-500 w-5"></i>
+                        <span class="flex-1 text-sm font-medium text-gray-700">Help & Support</span>
+                        <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                    </div>
+                    <div class="p-4 border-b border-gray-50 flex items-center gap-4 bg-gray-50 active:bg-gray-100" onclick="appState.navigate('admin')">
+                        <i class="fas fa-user-shield text-purple-600 w-5"></i>
+                        <span class="flex-1 text-sm font-bold text-purple-700">Admin Panel (Demo)</span>
+                        <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                    </div>
+                    <div class="p-4 flex items-center gap-4 text-red-500 active:bg-red-50" onclick="appState.logout()">
+                        <i class="fas fa-sign-out-alt w-5"></i>
+                        <span class="flex-1 text-sm font-medium">Log Out</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. ADMIN PANEL VIEW -->
+            <div id="view-admin" class="view-section hidden p-4 space-y-4 bg-gray-800 min-h-full">
+                <div class="flex items-center gap-3 mb-6">
+                    <button onclick="appState.navigate('profile')" class="text-gray-300 p-2"><i class="fas fa-arrow-left"></i></button>
+                    <h2 class="text-xl font-bold text-white">Admin Dashboard</h2>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-gray-700 p-4 rounded-xl text-center">
+                        <p class="text-gray-400 text-xs mb-1">Total Users</p>
+                        <h3 class="text-2xl font-bold text-white">1,204</h3>
+                    </div>
+                    <div class="bg-gray-700 p-4 rounded-xl text-center">
+                        <p class="text-gray-400 text-xs mb-1">Total Payouts</p>
+                        <h3 class="text-2xl font-bold text-green-400">৳ 5,420</h3>
+                    </div>
+                </div>
+
+                <h3 class="font-bold text-white text-sm mb-2">Pending Withdrawals</h3>
+                <div id="admin-requests" class="space-y-3">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bg-white border-t border-gray-200 flex justify-around items-center p-3 pb-5 absolute bottom-0 w-full z-20" id="bottom-nav">
+            <button onclick="appState.navigate('home')" class="nav-btn active flex flex-col items-center gap-1 text-blue-600 transition" data-target="home">
+                <i class="fas fa-home text-xl"></i>
+                <span class="text-[10px] font-medium">Home</span>
+            </button>
+            <button onclick="appState.navigate('tasks')" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-blue-500 transition" data-target="tasks">
+                <i class="fas fa-tasks text-xl"></i>
+                <span class="text-[10px] font-medium">Tasks</span>
+            </button>
+            <button onclick="appState.navigate('wallet')" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-blue-500 transition" data-target="wallet">
+                <i class="fas fa-wallet text-xl"></i>
+                <span class="text-[10px] font-medium">Wallet</span>
+            </button>
+            <button onclick="appState.navigate('profile')" class="nav-btn flex flex-col items-center gap-1 text-gray-400 hover:text-blue-500 transition" data-target="profile">
+                <i class="fas fa-user text-xl"></i>
+                <span class="text-[10px] font-medium">Profile</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="absolute top-10 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-full text-sm font-medium opacity-0 pointer-events-none transition-opacity duration-300 z-[100] shadow-lg whitespace-nowrap">
+        Message goes here
+    </div>
+
+</div>
+
+<script>
+    // --- Application State & Logic ---
+    const appState = {
+        points: 0,
+        userContact: '',
+        withdrawRequests: [
+            { id: 1, user: '01711***222', method: 'bKash', amount: 2000, bdt: 20 },
+            { id: 2, user: '01922***333', method: 'Nagad', amount: 1500, bdt: 15 }
+        ],
+        leaderboard: [
+            { name: "Rahim U.", points: 15420 },
+            { name: "Karim M.", points: 12100 },
+            { name: "Sumi A.", points: 9850 },
+            { name: "You", points: 0 } // Will update dynamically
+        ],
+
+        init() {
+            // Check local storage for persistent points
+            if(localStorage.getItem('drh_points')) {
+                this.points = parseInt(localStorage.getItem('drh_points'));
+            }
+            this.updateUI();
+            this.renderLeaderboard();
+            this.renderAdminRequests();
+        },
+
+        login() {
+            const input = document.getElementById('login-email').value;
+            if(!input) return this.showToast("Please enter email or phone");
+            
+            this.userContact = input;
+            const initial = input.charAt(0).toUpperCase();
+            
+            document.getElementById('user-initial').innerText = initial;
+            document.getElementById('profile-initial').innerText = initial;
+            document.getElementById('user-greeting').innerText = `Hi, ${input.split('@')[0]}!`;
+            document.getElementById('profile-name').innerText = input.split('@')[0];
+            document.getElementById('profile-contact').innerText = input;
+
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('main-app').classList.add('flex');
+            
+            this.navigate('home');
+        },
+
+        logout() {
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('flex');
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('login-email').value = '';
+            document.getElementById('login-pass').value = '';
+        },
+
+        navigate(viewId) {
+            // Hide all views
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            // Show target view
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+
+            // Handle Bottom Nav Highlighting
+            if(viewId !== 'admin') {
+                document.getElementById('bottom-nav').classList.remove('hidden');
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    if(btn.dataset.target === viewId) {
+                        btn.classList.remove('text-gray-400');
+                        btn.classList.add('text-blue-600', 'active');
+                    } else {
+                        btn.classList.add('text-gray-400');
+                        btn.classList.remove('text-blue-600', 'active');
+                    }
+                });
+            } else {
+                // Hide nav on admin screen
+                document.getElementById('bottom-nav').classList.add('hidden');
+            }
+
+            this.updateUI();
+        },
+
+        addPoints(amount) {
+            this.points += amount;
+            localStorage.setItem('drh_points', this.points);
+            this.updateUI();
+            
+            // Pop animations on numbers
+            ['header-points', 'dash-points', 'wallet-points'].forEach(id => {
+                const el = document.getElementById(id);
+                el.classList.remove('pop-anim');
+                void el.offsetWidth; // trigger reflow
+                el.classList.add('pop-anim');
+            });
+
+            // Update user in leaderboard
+            this.leaderboard[3].points = this.points;
+            this.leaderboard.sort((a,b) => b.points - a.points);
+            this.renderLeaderboard();
+        },
+
+        doTask(event, taskName, reward) {
+            // Animation coordinates
+            const rect = event.currentTarget.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top;
+
+            this.showFloatingPoints(x, y, reward);
+            this.addPoints(reward);
+            this.showToast(`${taskName} completed! +${reward} pts`);
+        },
+
+        referFriend(event) {
+            const rect = event.currentTarget.getBoundingClientRect();
+            this.showFloatingPoints(rect.left, rect.top, 200);
+            this.addPoints(200);
+            this.showToast("Referral successful! +200 pts");
+        },
+
+        withdraw() {
+            const method = document.getElementById('withdraw-method').value;
+            const account = document.getElementById('withdraw-account').value;
+            const amount = parseInt(document.getElementById('withdraw-amount').value);
+
+            if(!account) return this.showToast("Enter account number!");
+            if(!amount || amount < 1000) return this.showToast("Minimum 1000 points required!");
+            if(amount > this.points) return this.showToast("Insufficient points!");
+
+            // Deduct points
+            this.addPoints(-amount);
+            
+            // Add to admin requests
+            this.withdrawRequests.push({
+                id: Math.floor(Math.random() * 10000),
+                user: account,
+                method: method,
+                amount: amount,
+                bdt: amount / 100
+            });
+            
+            this.renderAdminRequests();
+            this.showToast(`Withdrawal of ${amount/100} BDT requested via ${method}`);
+            
+            document.getElementById('withdraw-account').value = '';
+            document.getElementById('withdraw-amount').value = '';
+        },
+
+        approveRequest(id) {
+            this.withdrawRequests = this.withdrawRequests.filter(req => req.id !== id);
+            this.renderAdminRequests();
+            this.showToast("Withdrawal Approved!");
+        },
+
+        updateUI() {
+            const bdt = (this.points / 100).toFixed(2);
+            document.getElementById('header-points').innerText = `Points: ${this.points}`;
+            document.getElementById('dash-points').innerText = this.points;
+            document.getElementById('dash-bdt').innerText = bdt;
+            document.getElementById('wallet-points').innerText = this.points;
+            document.getElementById('wallet-bdt').innerText = bdt;
+        },
+
+        showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.opacity = '1';
+            setTimeout(() => { toast.style.opacity = '0'; }, 2000);
+        },
+
+        showFloatingPoints(x, y, amount) {
+            const el = document.createElement('div');
+            el.className = 'point-anim';
+            el.innerText = `+${amount}`;
+            el.style.left = `${x}px`;
+            el.style.top = `${y}px`;
+            document.body.appendChild(el);
+            setTimeout(() => { el.remove(); }, 1000);
+        },
+
+        renderLeaderboard() {
+            const list = document.getElementById('leaderboard-list');
+            list.innerHTML = '';
+            this.leaderboard.forEach((user, index) => {
+                const isMe = user.name === "You" || user.name === this.userContact.split('@')[0];
+                const bg = isMe ? 'bg-blue-50' : 'bg-white';
+                const rankColor = index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : index === 2 ? 'text-orange-400' : 'text-gray-600';
+                
+                list.innerHTML += `
+                    <div class="flex items-center justify-between p-3 border-b border-gray-50 ${bg}">
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold ${rankColor} w-4">${index + 1}</span>
+                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">
+                                ${user.name.charAt(0)}
+                            </div>
+                            <span class="text-sm font-medium text-gray-800 ${isMe ? 'text-blue-600' : ''}">${user.name}</span>
+                        </div>
+                        <span class="text-xs font-bold text-gray-600">${user.points} pts</span>
+                    </div>
+                `;
+            });
+        },
+
+        renderAdminRequests() {
+            const list = document.getElementById('admin-requests');
+            list.innerHTML = '';
+            if(this.withdrawRequests.length === 0) {
+                list.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">No pending requests</p>';
+                return;
+            }
+            this.withdrawRequests.forEach(req => {
+                list.innerHTML += `
+                    <div class="bg-gray-700 p-4 rounded-xl flex justify-between items-center">
+                        <div>
+                            <p class="text-white font-bold text-sm">${req.method} - ৳${req.bdt}</p>
+                            <p class="text-gray-400 text-xs">${req.user} (${req.amount} pts)</p>
+                        </div>
+                        <button onclick="appState.approveRequest(${req.id})" class="bg-green-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold active:scale-95 transition">Approve</button>
+                    </div>
+                `;
+            });
+        }
+    };
+
+    // Initialize App
+    window.onload = () => {
+        appState.init();
+    };
+
+</script>
+</body>
+</html>
